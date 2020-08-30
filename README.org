@@ -1,0 +1,43 @@
+#+TITLE: jq.el.
+
+* Decription
+Emacs Lisp bindings for jq.
+
+* Usage
+#+begin_src elisp
+(require 'jq)
+
+(let* ((input "
+[
+  {
+    \"name\": \"Ness\",
+    \"age\": 12,
+    \"origin\": { \"country\": \"Eagleland\", \"town\": \"Onett\" }
+  },
+  {
+    \"name\": \"Paula\",
+    \"age\": 11,
+    \"origin\": { \"country\": \"Eagleland\", \"town\": \"Twoson\" }
+  }
+]
+"))
+  (cl-loop for x iter-by (jq input ".[] | {town: .origin.town}")
+           do (print x)))
+
+;;=> ((town . "Onett")) ((town . "Twoson"))
+#+end_src
+
+* Build
+#+begin_src sh
+mkdir build
+cd build
+cmake ..
+cmake --build .
+
+EMACSLOADPATH="$EMACSLOADPATH:.:./build" cask emacs -Q
+#+end_src
+
+* Test
+#+begin_src
+EMACSLOADPATH="$EMACSLOADPATH:.:./build" cask exec ert-runner
+#+end_src
