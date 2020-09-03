@@ -3,15 +3,13 @@
 #include <sstream>
 #include <string>
 
-#include <iostream>
-
 extern "C" {
 #include <jv.h>
 #include <jq.h>
 }
 
-#include "utils.h"
 #include "jq_impl.h"
+#include "utils.h"
 
 int plugin_is_GPL_compatible;
 
@@ -20,7 +18,7 @@ int emacs_module_init(struct emacs_runtime* ert) {
   if (static_cast<long unsigned int>(ert->size) < sizeof(*ert))
     return 1;
 
-  emacs_env *env = ert->get_environment (ert);
+  auto env = ert->get_environment (ert);
 
   // Verify the compatibility of the module API.
   if (static_cast<long unsigned int>(env->size) < sizeof(*env))
@@ -40,7 +38,7 @@ int emacs_module_init(struct emacs_runtime* ert) {
 }
 
 static void jq_impl_teardown(void* jq) noexcept {
-  jq_state* jq_ = reinterpret_cast<jq_state*>(jq);
+  auto jq_ = reinterpret_cast<jq_state*>(jq);
   jq_teardown(&jq_);
 }
 
@@ -53,43 +51,68 @@ static emacs_value jq_impl_init(
   env->copy_string_contents(env, args[0], input, &input_size);
   env->copy_string_contents(env, args[2], program, &program_size);
 
-  jq_state* jq = jq_init();
+  auto jq = jq_init();
 
   int compiled = jq_compile_args(jq, program, jv_object());
 
-  std::string ret;
+  std::string ret, error_message, error_symbol = "error";
 
   if (!compiled) {
-    // TODO: エラーハンドリング、どうやるの？？
-    std::cerr << "jq_compile_args failed." << std::endl;
+    error_message = "jq: error: compil error";
+    goto error;
   } else {
-    jv_parser* parser = jv_parser_new(0);
+    auto parser = jv_parser_new(0);
     jv_parser_set_buf(parser, input, input_size, 0);
-    jv value = jv_parser_next(parser);
+    auto value = jv_parser_next(parser);
 
     if (jv_is_valid(value)) {
       jq_start(jq, value, 0);
+      // Return a pointer to jq for succeeding calls of `jq_impl_next`.
       return env->make_user_ptr(env, jq_impl_teardown, jq);
     } else if (jv_invalid_has_msg(jv_copy(value))) {
-      std::cerr << "jq_parse_next parse failed." << std::endl;
+      // Parse error.
+      auto msg = jv_invalid_get_msg(jv_copy(value));
+      std::stringstream error_message_stream;
+
+      if (jv_get_kind(msg) == JV_KIND_STRING) {
+        error_message_stream << "jq: error: " << jv_string_value(msg);
+      } else {
+        error_message_stream
+          << "jq: error: (not a string): "
+          << jv_string_value(jv_dump_string(msg, 0));
+      }
+
+      error_message = error_message_stream.str();
+
+      jv_free(msg);
+
+      goto error;
     } else {
-      std::cerr << "jq_impl system error." << std::endl;
+      error_message = "jq: error: system error";
+      goto error;
     }
   }
+
+error:
+  jq_teardown(&jq);
+  env->non_local_exit_signal(
+    env, env->intern(env, error_symbol.c_str()),
+    env->make_string(env, error_message.c_str(), error_message.size()));
+  return env->intern(env, "nil");
 }
 
 static emacs_value jq_impl_next(
   emacs_env* env, ptrdiff_t nargs, emacs_value* args, void* data) noexcept {
-  emacs_value nil = env->intern(env, "nil");
-  jq_state* jq = reinterpret_cast<jq_state*>(env->get_user_ptr(env, args[0]));
-  jv result = jq_next(jq);
+  auto nil = env->intern(env, "nil");
+  auto jq = reinterpret_cast<jq_state*>(env->get_user_ptr(env, args[0]));
+  auto result = jq_next(jq);
 
   if (!jv_is_valid(result)) {
     jv_free(result);
     return nil;
   }
 
-  jv dumped = jv_dump_string(jv_copy(result), 0);
+  auto dumped = jv_dump_string(jv_copy(result), 0);
   std::string dumped_str = jv_string_value(dumped);
 
   jv_free(dumped);
