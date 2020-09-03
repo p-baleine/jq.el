@@ -3,8 +3,6 @@
 #include <sstream>
 #include <string>
 
-#include <iostream>
-
 extern "C" {
 #include <jv.h>
 #include <jq.h>
@@ -57,11 +55,11 @@ static emacs_value jq_impl_init(
 
   int compiled = jq_compile_args(jq, program, jv_object());
 
-  std::string ret;
+  std::string ret, error_message, error_symbol = "error";
 
   if (!compiled) {
-    // TODO: エラーハンドリング、どうやるの？？
-    std::cerr << "jq_compile_args failed." << std::endl;
+    error_message = "jq: error: compil error";
+    goto error;
   } else {
     jv_parser* parser = jv_parser_new(0);
     jv_parser_set_buf(parser, input, input_size, 0);
@@ -71,11 +69,35 @@ static emacs_value jq_impl_init(
       jq_start(jq, value, 0);
       return env->make_user_ptr(env, jq_impl_teardown, jq);
     } else if (jv_invalid_has_msg(jv_copy(value))) {
-      std::cerr << "jq_parse_next parse failed." << std::endl;
+      jv msg = jv_invalid_get_msg(jv_copy(value));
+      std::stringstream error_message_stream;
+
+      if (jv_get_kind(msg) == JV_KIND_STRING) {
+        error_message_stream
+          << "jq: error: " << jv_string_value(msg);
+      } else {
+        error_message_stream
+          << "jq: error: (not a string): "
+          << jv_string_value(jv_dump_string(msg, 0));
+      }
+
+      error_message = error_message_stream.str();
+
+      jv_free(msg);
+
+      goto error;
     } else {
-      std::cerr << "jq_impl system error." << std::endl;
+      error_message = "jq: error: system error";
+      goto error;
     }
   }
+
+error:
+  jq_teardown(&jq);
+  env->non_local_exit_signal(
+    env, env->intern(env, error_symbol.c_str()),
+    env->make_string(env, error_message.c_str(), error_message.size()));
+  return env->intern(env, "nil");
 }
 
 static emacs_value jq_impl_next(

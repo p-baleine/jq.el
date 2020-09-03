@@ -8,3 +8,4 @@ tmp/
 
 *~
 ert-profile
+.ccls-cache
