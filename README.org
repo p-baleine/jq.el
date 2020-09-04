@@ -1,13 +1,13 @@
 #+TITLE: jq.el.
 
 * Decription
-Emacs Lisp bindings for jq.
+Emacs Lisp bindings for [[https://stedolan.github.io/jq/][jq]].
 
-* Usage
+** Usage
 #+begin_src elisp
 (require 'jq)
 
-(let* ((input "
+(let ((input "
 [
   {
     \"name\": \"Ness\",
@@ -21,23 +21,126 @@ Emacs Lisp bindings for jq.
   }
 ]
 "))
-  (cl-loop for x iter-by (jq input ".[] | {town: .origin.town}")
-           do (print x)))
+  (cl-loop for x iter-by (jq input ".[] | .origin.town") collect x))
 
-;;=> ((town . "Onett")) ((town . "Twoson"))
+;;=> ("Onett" "Twoson")
 #+end_src
 
-* Build
+** Motivation
+Recently I wanted an API client for Emacs which communicate with a RESTful server. I read documents and code of the RESTful server and designed the API client naively by calling the server with [[https://curl.haxx.se/][curl]] and [[https://stedolan.github.io/jq/][jq]].
+
+Then, when I would implement the designed client on Emacs Lisp, I remembered that it is a bother to parse JSON strings on Emacs Lisp and I would have to call the server multiple times to implement the client.
+
+Emacs Lisp includes [[https://github.com/emacs-mirror/emacs/blob/master/lisp/json.el][json.el]] and can parse JSON strings but the results are association lists, so if the fields I am interested in are placed deeply inner the code to retrieve the fields would be very complicated.
+
+Below is a sample where I would want =origin.town= of each element from a JSON string =input=.
+
+#+begin_src elisp
+(let* ((input "
+[
+  {
+    \"name\": \"Ness\",
+    \"age\": 12,
+    \"origin\": { \"country\": \"Eagleland\", \"town\": \"Onett\" }
+  },
+  {
+    \"name\": \"Paula\",
+    \"age\": 11,
+    \"origin\": { \"country\": \"Eagleland\", \"town\": \"Twoson\" }
+  }
+]
+")
+       (parsed (json-read-from-string input)))
+  (cl-loop for entry across parsed
+    collect (let* ((origin (cdr (assoc 'origin entry)))
+                   (town (cdr (assoc 'town origin))))
+              town)))
+
+;;=> ("Onett" "Twoson")
+#+end_src
+
+If my interested fields are placed more deeply inner, the program would be more complicated.
+
+Why I cannot retrieve interested fields of JSON string as simple as the design phase where I could use curl and jq?
+
+This is the motivation that drives me to implement jq.el. With jq.el, we can rewrite the above program as below.
+
+#+begin_src elisp
+(let ((input "
+[
+  {
+    \"name\": \"Ness\",
+    \"age\": 12,
+    \"origin\": { \"country\": \"Eagleland\", \"town\": \"Onett\" }
+  },
+  {
+    \"name\": \"Paula\",
+    \"age\": 11,
+    \"origin\": { \"country\": \"Eagleland\", \"town\": \"Twoson\" }
+  }
+]
+"))
+  (cl-loop for x iter-by (jq input ".[] | .origin.town") collect x))
+
+;;=> ("Onett" "Twoson")
+#+end_src
+
+* Getting Started
+** Prerequisites
+- Emacs :: >= 25, this package takes advantage of [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Dynamic-Modules.html#Dynamic-Modules][Emacs Dynamic Modules]] so Emacs is required to be built with =-with-modules= option at configuration time. Also, this package is tested only on Emacs 27.
+- cmake :: >= 3.10.0
+
+** Building
 #+begin_src sh
 mkdir build
 cd build
 cmake ..
 cmake --build .
-
-EMACSLOADPATH="$EMACSLOADPATH:.:./build" cask emacs -Q
 #+end_src
 
-* Test
+** Installing
+*** On [[https://github.com/hlissner/doom-emacs][Doom Emacs]]
+Add the following code to =~/.config/doom/packages.el=.
+
+#+begin_src elisp
+(package! jq
+  :recipe (:local-repo "/path/to/jq.el"
+            :files (
+              "*.el"
+              "build/jq-impl.so")))
+#+end_src
+
+*** On [[https://www.spacemacs.org/][Spacemacs]]
+Add the following code to =dotspacemacs-additional-packages= of =~/.spacemacs=.
+
+#+begin_src elisp
+   dotspacemacs-additional-packages
+   '(
+     ;; ...
+     (jq.el :location "/path/to/jq.el/jq.el")
+     (jq-impl.el :location "/path/to/jq.el/build/jq-impl.el")
+     )
+#+end_src
+
+*** With [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Packages.html#Packages][Emacs Lisp Packages]]
+Add the following code to =~/.init.el=.
+
+#+begin_src elisp
+(require 'package)
+
+(package-install-file "/path/to/jq.el/jq.el")
+(package-install-file "/path/to/jq.el/build/jq-impl.el")
+#+end_src
+
+* API
+** jq =(input program)=
+Return results of executing jq by passing =input= and =program= as arguments.
+
+* Development
+** Running tests
 #+begin_src
 EMACSLOADPATH="$EMACSLOADPATH:.:./build" cask exec ert-runner
 #+end_src
+
+* License
+This project is licensed under the MIT License - see the [[./LICENSE.md][LICENSE.md]] file for details.
