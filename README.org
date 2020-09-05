@@ -137,6 +137,19 @@ Add the following code to =~/.init.el=.
 Return results of executing jq by passing =input= and =program= as arguments.
 
 * Development
+** Prerequisites
+*** Cask
+This package needs [[https://cask.readthedocs.io/en/latest/][Cask]] for developing.
+
+#+begin_src sh
+# Install Cask.
+curl -fsSL https://raw.githubusercontent.com/cask/cask/master/go | python
+export PATH="/root/.cask/bin:$PATH"
+cd /path/to/jq.el
+# Install jq.el dependencies.
+cask install
+#+end_src
+
 ** Running tests
 #+begin_src
 EMACSLOADPATH="$EMACSLOADPATH:.:./build" cask exec ert-runner
