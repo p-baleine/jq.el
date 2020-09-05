@@ -42,6 +42,8 @@ add_library(jq_impl SHARED
   src/utils.cc
   )
 
+add_dependencies(jq_impl libjq)
+
 target_include_directories(jq_impl PUBLIC
   ${JQ_INCLUDE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/src)
