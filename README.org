@@ -1,5 +1,7 @@
 #+TITLE: jq.el.
 
+[[https://github.com/p-baleine/jq.el/workflows/CI/badge.svg?branch=master]]
+
 * Decription
 Emacs Lisp bindings for [[https://stedolan.github.io/jq/][jq]].
 
