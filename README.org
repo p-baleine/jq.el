@@ -139,23 +139,16 @@ Add the following code to =~/.init.el=.
 Return results of executing jq by passing =input= and =program= as arguments.
 
 * Development
-** Prerequisites
-*** Cask
-This package needs [[https://cask.readthedocs.io/en/latest/][Cask]] for developing.
-
-#+begin_src sh
-# Install Cask.
-curl -fsSL https://raw.githubusercontent.com/cask/cask/master/go | python
-export PATH="/root/.cask/bin:$PATH"
-cd /path/to/jq.el
-# Install jq.el dependencies.
-cask install
-#+end_src
-
 ** Running tests
 #+begin_src
-EMACSLOADPATH="$EMACSLOADPATH:.:./build" cask exec ert-runner
+emacs -Q --batch -L build -f batch-byte-compile jq.el \
+  && emacs -Q --batch -L build -L . -l test/jq-test.el -f ert-run-tests-batch-and-exit
 #+end_src
+
+* Acknowledgments
+- I'm very thankful for comment of @xuchunyang about lack of my understanding.
+  - https://github.com/p-baleine/jq.el/pull/8
+  - https://www.reddit.com/r/emacs/comments/imf6wd/new_package_jqel/g44r58e/?utm_source=reddit&utm_medium=web2x&context=3
 
 * License
 This project is licensed under the MIT License - see the [[./LICENSE.md][LICENSE.md]] file for details.
