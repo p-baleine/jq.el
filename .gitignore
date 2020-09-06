@@ -7,5 +7,6 @@ tmp/
 /.cask
 
 *~
+*.elc
 ert-profile
 .ccls-cache
