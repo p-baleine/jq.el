@@ -89,7 +89,6 @@ This is the motivation that drives me to implement jq.el. With jq.el, we can rew
 
 * Getting Started
 ** Prerequisites
-- Emacs :: >= 25, this package takes advantage of [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Dynamic-Modules.html#Dynamic-Modules][Emacs Dynamic Modules]] so Emacs is required to be built with =-with-modules= option at configuration time. Also, this package is tested only on Emacs 27.
 - cmake :: >= 3.10.0
 
 ** Building
@@ -146,7 +145,7 @@ emacs -Q --batch -L build -f batch-byte-compile jq.el \
 #+end_src
 
 * Acknowledgments
-- I'm very thankful for comment of @xuchunyang about lack of my understanding.
+- I'm very thankful for comment of [[https://github.com/xuchunyang][@xuchunyang]] about lack of my understanding.
   - https://github.com/p-baleine/jq.el/pull/8
   - https://www.reddit.com/r/emacs/comments/imf6wd/new_package_jqel/g44r58e/?utm_source=reddit&utm_medium=web2x&context=3
 
