@@ -95,13 +95,13 @@ This is the motivation that drives me to implement jq.el. With jq.el, we can rew
 To install all build dependencies on Ubuntu, use:
 
 #+begin_src sh
-apt install cmake build-essential autoconf libtool bison flex git libonig-dev libjq-dev emacs-common
+apt install cmake build-essential autoconf libtool
 #+end_src
 
 On Fedora, use:
 
 #+begin_src sh
-dnf install cmake make gcc gcc-c++ autoconf libtool bison flex git oniguruma-devel jq-devel emacs-devel
+dnf install cmake make gcc gcc-c++ autoconf libtool
 #+end_src
 
 ** Building
