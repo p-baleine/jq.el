@@ -90,6 +90,19 @@ This is the motivation that drives me to implement jq.el. With jq.el, we can rew
 * Getting Started
 ** Prerequisites
 - cmake :: >= 3.10.0
+- other build dependencies :: oniguruma headers, gcc, gcc-c++, libtool, autoconf, yacc & lex and git
+
+To install all build dependencies on Ubuntu, use:
+
+#+begin_src sh
+apt install cmake build-essential autoconf libtool
+#+end_src
+
+On Fedora, use:
+
+#+begin_src sh
+dnf install cmake make gcc gcc-c++ autoconf libtool
+#+end_src
 
 ** Building
 #+begin_src sh
