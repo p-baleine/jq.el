@@ -131,8 +131,8 @@ Add the following code to =dotspacemacs-additional-packages= of =~/.spacemacs=.
    dotspacemacs-additional-packages
    '(
      ;; ...
-     (jq.el :location "/path/to/jq.el/jq.el")
-     (jq-impl.el :location "/path/to/jq.el/build/jq-impl.el")
+     (jq :location "/path/to/jq.el/")
+     (jq-impl :location "/path/to/jq.el/build/")
      )
 #+end_src
 
